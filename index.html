@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scientific Color Map Selector</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1, h2 {
+            color: #2c3e50;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .selection-history {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .history-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .history-question {
+            font-weight: bold;
+            margin-right: 10px;
+            min-width: 150px;
+        }
+        
+        .history-answer {
+            color: #2980b9;
+            font-weight: 500;
+        }
+        
+        .question-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .question {
+            font-size: 18px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        
+        .options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .option-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 16px;
+        }
+        
+        .option-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .result-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: none;
+        }
+        
+        .colormap-display {
+            width: 100%;
+            height: 40px;
+            margin: 15px 0;
+            background-image: linear-gradient(to right, #ff0000, #00ff00, #0000ff);
+            border-radius: 5px;
+        }
+        
+        .colormap-info {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .restart-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 16px;
+            margin-top: 20px;
+            align-self: flex-start;
+        }
+        
+        .restart-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        .colormap-class-info {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .colormap-class-img {
+            width: 150px;
+            height: 30px;
+            border-radius: 4px;
+        }
+        
+        .settings-btn {
+            background-color: #7f8c8d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: auto;
+        }
+        
+        .settings-panel {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            display: none;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .add-btn {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .remove-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Scientific Color Map Selector</h1>
+            <p>NSLab Colour Choice Guide made by SeungWoo Paek | Last Update: May 10, 2025</p>
+            <p>Based on the guidelines from "The misuse of colour in science communication" by Crameri et al. (2020)</p>
+            <button class="settings-btn" onclick="toggleSettings()">Database Settings</button>
+        </header>
+        
+        <div class="selection-history" id="selectionHistory">
+            <h2>Your Selections</h2>
+            <div id="historyItems"></div>
+        </div>
+        
+        <div class="question-container" id="questionContainer">
+            <div class="question" id="currentQuestion">Does your data have an order?</div>
+            <div class="options" id="options">
+                <button class="option-btn" onclick="selectOption('Ordered', true)">Yes (Ordered)</button>
+                <button class="option-btn" onclick="selectOption('Not Ordered', false)">No (Not Ordered)</button>
+            </div>
+        </div>
+        
+        <div class="colormap-class-info" id="classInfo" style="display: none;">
+            <div>
+                <h3 id="recommendedClass"></h3>
+                <p id="classDescription"></p>
+            </div>
+            <div class="colormap-class-img" id="classImage"></div>
+        </div>
+        
+        <div class="result-container" id="resultContainer">
+            <h2>Recommended Color Map</h2>
+            <h3 id="colorMapName"></h3>
+            <div class="colormap-display" id="colorMapDisplay"></div>
+            <div class="colormap-info">
+                <div>
+                    <p><strong>Class:</strong> <span id="colorMapClass"></span></p>
+                    <p><strong>Type:</strong> <span id="colorMapType"></span></p>
+                </div>
+                <div>
+                    <p><strong>Description:</strong> <span id="colorMapDescription"></span></p>
+                </div>
+            </div>
+        </div>
+        
+        <button class="restart-btn" onclick="restartSelection()" style="display: none;" id="restartBtn">Start Over</button>
+        
+        <div class="settings-panel" id="settingsPanel">
+            <h2>Color Map Database Management</h2>
+            
+            <div class="form-group">
+                <h3>Add New Color Map</h3>
+                <div class="form-group">
+                    <label for="cmName">Name:</label>
+                    <input type="text" id="cmName">
+                </div>
+                <div class="form-group">
+                    <label for="cmClass">Class:</label>
+                    <select id="cmClass">
+                        <option value="Sequential">Sequential</option>
+                        <option value="Diverging">Diverging</option>
+                        <option value="Multi-sequential">Multi-sequential</option>
+                        <option value="Cyclic">Cyclic</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="cmType">Type:</label>
+                    <select id="cmType">
+                        <option value="Continuous">Continuous</option>
+                        <option value="Discrete">Discrete</option>
+                        <option value="Categorical">Categorical</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="cmDescription">Description:</label>
+                    <input type="text" id="cmDescription">
+                </div>
+                <div class="form-group">
+                    <label for="cmGradient">CSS Gradient:</label>
+                    <input type="text" id="cmGradient" placeholder="e.g., linear-gradient(to right, #fff, #000)">
+                </div>
+                <button class="add-btn" onclick="addColorMap()">Add Color Map</button>
+            </div>
+            
+            <h3>Current Color Maps</h3>
+            <table id="colorMapsTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Class</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="colorMapsBody">
+                    <!-- Table content will be dynamically populated -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Decision tree structure
+        const decisionTree = {
+            "Ordered": {
+                question: "Does your data have a central value?",
+                options: [
+                    { label: "Yes", value: "Centric Value" },
+                    { label: "No", value: "No Centric Value" }
+                ]
+            },
+            "Not Ordered": {
+                result: {
+                    class: "Sequential",
+                    type: "Categorical"
+                },
+                description: "Use Sequential color maps for categorical data that has no inherent order."
+            },
+            "Centric Value": {
+                question: "Is the data ordered relative to a central value?",
+                options: [
+                    { label: "Yes", value: "A" },
+                    { label: "No", value: "B" }
+                ]
+            },
+            "No Centric Value": {
+                question: "Is the data periodic (e.g., orientation)?",
+                options: [
+                    { label: "Yes", value: "B" },
+                    { label: "No", value: "Small Variations" }
+                ]
+            },
+            "A": {
+                result: {
+                    class: "Diverging",
+                    type: "Continuous"
+                },
+                description: "Use Diverging color maps for data that varies from a central value in two directions."
+            },
+            "B": {
+                result: {
+                    class: "Cyclic",
+                    type: "Continuous"
+                },
+                description: "Use Cyclic color maps for periodic data where the endpoints meet."
+            },
+            "Small Variations": {
+                question: "Should small data variations be visible?",
+                options: [
+                    { label: "Yes", value: "Empty Values" },
+                    { label: "No", value: "Sequential Basic" }
+                ]
+            },
+            "Sequential Basic": {
+                result: {
+                    class: "Sequential",
+                    type: "Continuous"
+                },
+                description: "Use Sequential color maps for ordered data without specific requirements."
+            },
+            "Empty Values": {
+                question: "Does the data contain empty values like NaNs? (e.g., measured surface temperature)",
+                options: [
+                    { label: "Yes", value: "Intuitive Colors" },
+                    { label: "No", value: "Sequential Detailed" }
+                ]
+            },
+            "Intuitive Colors": {
+                question: "Is there an intuitive coloring for the parameter? (e.g., blue to red for temperature)",
+                options: [
+                    { label: "Yes", value: "Centric Question" },
+                    { label: "No", value: "Sequential With Gaps" }
+                ]
+            },
+            "Sequential Detailed": {
+                result: {
+                    class: "Sequential",
+                    type: "Continuous"
+                },
+                description: "Use Sequential color maps with high perceptual range to show small variations."
+            },
+            "Sequential With Gaps": {
+                result: {
+                    class: "Sequential",
+                    type: "Continuous"
+                },
+                description: "Use Sequential color maps that clearly distinguish NaN/empty values."
+            },
+            "Centric Question": {
+                question: "Does the data have a central value? (e.g., zero in vertical velocity)",
+                options: [
+                    { label: "Yes", value: "Background Question" },
+                    { label: "No", value: "Parameter Intuitive" }
+                ]
+            },
+            "Parameter Intuitive": {
+                result: {
+                    class: "Sequential",
+                    type: "Continuous"
+                },
+                description: "Use Sequential color maps with parameter-intuitive colors."
+            },
+            "Background Question": {
+                question: "Is the plot background light?",
+                options: [
+                    { label: "Yes", value: "Light Background" },
+                    { label: "No", value: "Dark Background" }
+                ]
+            },
+            "Light Background": {
+                result: {
+                    class: "Diverging",
+                    type: "Continuous"
+                },
+                description: "Use Diverging color maps with light colored center."
+            },
+            "Dark Background": {
+                result: {
+                    class: "Diverging",
+                    type: "Continuous"
+                },
+                description: "Use Diverging color maps with dark colored center."
+            }
+        };
+
+        // Color maps database
+        let colorMaps = [
+            {
+                name: "batlow",
+                class: "Sequential",
+                type: "Continuous",
+                description: "Perceptually uniform rainbow-like palette",
+                gradient: "linear-gradient(to right, #020202, #221b47, #382e78, #4d4291, #645ea1, #7e7bac, #999fb5, #b8c6c0, #d3e5cc, #f0f5a2, #ffd400)"
+            },
+            {
+                name: "batlows",
+                class: "Sequential",
+                type: "Discrete",
+                description: "Discrete version of batlow",
+                gradient: "linear-gradient(to right, #020202, #221b47, #382e78, #4d4291, #645ea1, #7e7bac, #999fb5, #b8c6c0, #d3e5cc, #f0f5a2, #ffd400)"
+            },
+            {
+                name: "batlow10",
+                class: "Sequential",
+                type: "Categorical",
+                description: "Categorical version of batlow",
+                gradient: "linear-gradient(to right, #020202, #221b47, #382e78, #4d4291, #645ea1, #7e7bac, #999fb5, #b8c6c0, #d3e5cc, #f0f5a2, #ffd400)"
+            },
+            {
+                name: "roma",
+                class: "Diverging",
+                type: "Continuous",
+                description: "Red-white-orange diverging palette",
+                gradient: "linear-gradient(to right, #7c1d6f, #b8407a, #da707e, #ed9e87, #f5c7a1, #f8e5c4, #faf8cf, #e2e5af, #b5c89b, #7fa391, #3f7677)"
+            },
+            {
+                name: "roma10",
+                class: "Diverging",
+                type: "Discrete",
+                description: "Discrete version of roma",
+                gradient: "linear-gradient(to right, #7c1d6f, #b8407a, #da707e, #ed9e87, #f5c7a1, #f8e5c4, #faf8cf, #e2e5af, #b5c89b, #7fa391, #3f7677)"
+            },
+            {
+                name: "oleron",
+                class: "Multi-sequential",
+                type: "Continuous",
+                description: "Multi-sequential palette",
+                gradient: "linear-gradient(to right, #16165c, #481f6d, #7a2965, #a53d51, #c85c3f, #e09042, #ecca58, #e4e79e, #c5e8b9, #9cd7da, #8cbbb4)"
+            },
+            {
+                name: "oleron10",
+                class: "Multi-sequential",
+                type: "Discrete",
+                description: "Discrete version of oleron",
+                gradient: "linear-gradient(to right, #16165c, #481f6d, #7a2965, #a53d51, #c85c3f, #e09042, #ecca58, #e4e79e, #c5e8b9, #9cd7da, #8cbbb4)"
+            },
+            {
+                name: "romao",
+                class: "Diverging",
+                type: "Continuous",
+                description: "Diverging palette with light center",
+                gradient: "linear-gradient(to right, #7c1d6f, #b8407a, #da707e, #ed9e87, #f5c7a1, #f8e5c4, #faf8cf, #e2e5af, #b5c89b, #7fa391, #3f7677)"
+            },
+            {
+                name: "romao10",
+                class: "Diverging",
+                type: "Discrete",
+                description: "Discrete version of romao",
+                gradient: "linear-gradient(to right, #7c1d6f, #b8407a, #da707e, #ed9e87, #f5c7a1, #f8e5c4, #faf8cf, #e2e5af, #b5c89b, #7fa391, #3f7677)"
+            },
+            {
+                name: "hawaii",
+                class: "Cyclic",
+                type: "Continuous",
+                description: "Cyclic palette for periodic data",
+                gradient: "linear-gradient(to right, #521a50, #773777, #8f5a9a, #9f82be, #a6b0e0, #a6dffa, #99fff8, #8bffd8, #82ffae, #8df48a, #b3d36a)"
+            }
+        ];
+
+        // State variables
+        let selectionHistory = [];
+        let currentState = "Ordered"; // Starting point in the decision tree
+
+        // Initialize the database on page load
+        window.onload = function() {
+            loadColormaps();
+            updateColormapsTable();
+        };
+
+        function loadColormaps() {
+            const storedMaps = localStorage.getItem('colorMaps');
+            if (storedMaps) {
+                colorMaps = JSON.parse(storedMaps);
+            }
+        }
+
+        function saveColormaps() {
+            localStorage.setItem('colorMaps', JSON.stringify(colorMaps));
+        }
+
+        function selectOption(answer, next) {
+            // Add to history
+            const currentQuestion = document.getElementById('currentQuestion').textContent;
+            selectionHistory.push({ question: currentQuestion, answer: answer });
+            updateHistory();
+            
+            // Update the state
+            if (next) {
+                currentState = answer;
+                updateQuestion();
+            } else {
+                currentState = next;
+                showResult();
+            }
+        }
+
+        function updateHistory() {
+            const historyContainer = document.getElementById('historyItems');
+            historyContainer.innerHTML = '';
+            
+            selectionHistory.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                
+                const question = document.createElement('div');
+                question.className = 'history-question';
+                question.textContent = item.question;
+                
+                const answer = document.createElement('div');
+                answer.className = 'history-answer';
+                answer.textContent = item.answer;
+                
+                historyItem.appendChild(question);
+                historyItem.appendChild(answer);
+                historyContainer.appendChild(historyItem);
+            });
+        }
+
+        function updateQuestion() {
+            const node = decisionTree[currentState];
+            
+            if (node.result) {
+                showResult(node.result, node.description);
+            } else {
+                document.getElementById('currentQuestion').textContent = node.question;
+                
+                const optionsContainer = document.getElementById('options');
+                optionsContainer.innerHTML = '';
+                
+                node.options.forEach(option => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn';
+                    btn.textContent = option.label;
+                    btn.onclick = function() {
+                        selectOption(option.value, option.value);
+                    };
+                    optionsContainer.appendChild(btn);
+                });
+                
+                // Show class info if relevant
+                updateClassInfo();
+            }
+        }
+
+        function updateClassInfo() {
+            const classInfo = document.getElementById('classInfo');
+            const recommendedClass = document.getElementById('recommendedClass');
+            const classDescription = document.getElementById('classDescription');
+            const classImage = document.getElementById('classImage');
+            
+            let currentClass = null;
+            
+            // Determine current class based on selection history
+            if (selectionHistory.some(item => item.answer === "A")) {
+                currentClass = "Diverging";
+            } else if (selectionHistory.some(item => item.answer === "B")) {
+                currentClass = "Cyclic";
+            } else if (selectionHistory.length > 0 && selectionHistory[0].answer === "Not Ordered") {
+                currentClass = "Sequential (Categorical)";
+            } else if (selectionHistory.length > 0) {
+                currentClass = "Sequential";
+            }
+            
+            if (currentClass) {
+                classInfo.style.display = 'flex';
+                recommendedClass.textContent = `Color Map Class: ${currentClass}`;
+                
+                // Set description based on class
+                switch (currentClass) {
+                    case "Sequential":
+                        classDescription.textContent = "Uses a progressive change in lightness and/or saturation of color. Ideal for ordered data that progress from low to high.";
+                        classImage.style.backgroundImage = "linear-gradient(to right, #020202, #221b47, #382e78, #4d4291, #645ea1, #7e7bac, #999fb5, #b8c6c0, #d3e5cc, #f0f5a2, #ffd400)";
+                        break;
+                    case "Diverging":
+                        classDescription.textContent = "Uses two different hues that diverge from a common light color for a critical midpoint. Ideal for data with meaningful midpoint.";
+                        classImage.style.backgroundImage = "linear-gradient(to right, #7c1d6f, #b8407a, #da707e, #ed9e87, #f5c7a1, #f8e5c4, #faf8cf, #e2e5af, #b5c89b, #7fa391, #3f7677)";
+                        break;
+                    case "Cyclic":
+                        classDescription.textContent = "Creates a color progression that returns to the original color. Useful for periodic data like angles, time of day, etc.";
+                        classImage.style.backgroundImage = "linear-gradient(to right, #521a50, #773777, #8f5a9a, #9f82be, #a6b0e0, #a6dffa, #99fff8, #8bffd8, #82ffae, #8df48a, #b3d36a)";
+                        break;
+                    case "Sequential (Categorical)":
+                        classDescription.textContent = "Uses distinct colors for categorical data without implied order.";
+                        classImage.style.backgroundImage = "linear-gradient(to right, #020202, #221b47, #382e78, #4d4291, #645ea1, #7e7bac, #999fb5, #b8c6c0, #d3e5cc, #f0f5a2, #ffd400)";
+                        break;
+                }
+            } else {
+                classInfo.style.display = 'none';
+            }
+        }
+
+        function showResult(result, description) {
+            // Hide question container
+            document.getElementById('questionContainer').style.display = 'none';
+            document.getElementById('classInfo').style.display = 'none';
+            
+            // Get result from the last node if not provided
+            if (!result) {
+                const lastNode = decisionTree[currentState];
+                result = lastNode.result;
+                description = lastNode.description;
+            }
+            
+            // Find matching color maps
+            const matchingMaps = colorMaps.filter(map => 
+                map.class === result.class && map.type === result.type
+            );
+            
+            // Show result if there's a match
+            if (matchingMaps.length > 0) {
+                const recommended = matchingMaps[0]; // Get the first match
+                
+                document.getElementById('colorMapName').textContent = recommended.name;
+                document.getElementById('colorMapClass').textContent = recommended.class;
+                document.getElementById('colorMapType').textContent = recommended.type;
+                document.getElementById('colorMapDescription').textContent = recommended.description;
+                document.getElementById('colorMapDisplay').style.backgroundImage = recommended.gradient;
+                
+                document.getElementById('resultContainer').style.display = 'block';
+            } else {
+                // No match found
+                document.getElementById('resultContainer').style.display = 'block';
+                document.getElementById('colorMapName').textContent = "No matching color map found";
+                document.getElementById('colorMapClass').textContent = result.class;
+                document.getElementById('colorMapType').textContent = result.type;
+                document.getElementById('colorMapDescription').textContent = "Consider adding a suitable color map to the database.";
+                document.getElementById('colorMapDisplay').style.backgroundImage = "linear-gradient(to right, #ccc, #999)";
+            }
+            
+            // Show restart button
+            document.getElementById('restartBtn').style.display = 'block';
+        }
+
+        function restartSelection() {
+            // Reset state
+            selectionHistory = [];
+            currentState = "Ordered";
+            
+            // Clear history display
+            document.getElementById('historyItems').innerHTML = '';
+            
+            // Hide result and show question
+            document.getElementById('resultContainer').style.display = 'none';
+            document.getElementById('questionContainer').style.display = 'block';
+            document.getElementById('restartBtn').style.display = 'none';
+            document.getElementById('classInfo').style.display = 'none';
+            
+            // Reset question to initial
+            document.getElementById('currentQuestion').textContent = "Does your data have an order?";
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = `
+                <button class="option-btn" onclick="selectOption('Ordered', true)">Yes (Ordered)</button>
+                <button class="option-btn" onclick="selectOption('Not Ordered', false)">No (Not Ordered)</button>
+            `;
+        }
+
+        function toggleSettings() {
+            const settingsPanel = document.getElementById('settingsPanel');
+            if (settingsPanel.style.display === 'block') {
+                settingsPanel.style.display = 'none';
+            } else {
+                settingsPanel.style.display = 'block';
+                updateColormapsTable();
+            }
+        }
+
+        function updateColormapsTable() {
+            const tableBody = document.getElementById('colorMapsBody');
+            tableBody.innerHTML = '';
+            
+            colorMaps.forEach((map, index) => {
+                const row = document.createElement('tr');
+                
+                const nameCell = document.createElement('td');
+                nameCell.textContent = map.name;
+                
+                const classCell = document.createElement('td');
+                classCell.textContent = map.class;
+                
+                const typeCell = document.createElement('td');
+                typeCell.textContent = map.type;
+                
+                const descCell = document.createElement('td');
+                descCell.textContent = map.description;
+                
+                const actionCell = document.createElement('td');
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.textContent = 'Remove';
+                removeBtn.onclick = function() {
+                    removeColorMap(index);
+                };
+                actionCell.appendChild(removeBtn);
+                
+                row.appendChild(nameCell);
+                row.appendChild(classCell);
+                row.appendChild(typeCell);
+                row.appendChild(descCell);
+                row.appendChild(actionCell);
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        function addColorMap() {
+            const name = document.getElementById('cmName').value;
+            const cmClass = document.getElementById('cmClass').value;
+            const type = document.getElementById('cmType').value;
+            const description = document.getElementById('cmDescription').value;
+            const gradient = document.getElementById('cmGradient').value;
+            
+            if (!name || !description || !gradient) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            colorMaps.push({
+                name: name,
+                class: cmClass,
+                type: type,
+                description: description,
+                gradient: gradient
+            });
+            
+            saveColormaps();
+            updateColormapsTable();
+            
+            // Clear the form
+            document.getElementById('cmName').value = '';
+            document.getElementById('cmDescription').value = '';
+            document.getElementById('cmGradient').value = '';
+        }
+
+        function removeColorMap(index) {
+            if (confirm('Are you sure you want to remove this color map?')) {
+                colorMaps.splice(index, 1);
+                saveColormaps();
+                updateColormapsTable();
+            }
+        }
+    </script>
+</body>
+</html>
